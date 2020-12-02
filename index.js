@@ -46,55 +46,55 @@ function runSearch() {
     .then(function(answer) {
       switch (answer.action) {
       case "View All Employees":
-        artistSearch();
+        viewAllEmployees();
         break;
 
       case "View All Employees By Department":
-        multiSearch();
+        viewAllEmployeesByDepartment();
         break;
 
       case "View All Employees By Manager":
-        rangeSearch();
+        viewAllEmployeesByManager();
         break;
 
       case "Add Employee":
-        songSearch();
+        addEmployee();
         break;
 
       case "Remove Employee":
-        songAndAlbumSearch();
+        removeEmployee();
         break;
 
       case "Update Employee Role":
-        songAndAlbumSearch();
+        updateEmployeeRole();
         break;
 
       case "Update Employee Manager":
-        songAndAlbumSearch();
+        updateEmployeeManager();
         break;
 
       case "View All Roles":
-        songAndAlbumSearch();
+        viewAllRoles();
         break;
 
       case "Add Role":
-        songAndAlbumSearch();
+        addRole();
         break;
 
       case "View All Departments":
-        songAndAlbumSearch();
+        viewAllDepartments();
         break;
 
       case "Add Department":
-        songAndAlbumSearch();
+        addDepartment();
         break;
 
       case "Remove Department":
-        songAndAlbumSearch();
+        removeDepartment();
         break;
 
       case "Quit":
-        songAndAlbumSearch();
+        quit();
         break;
       }
     });
