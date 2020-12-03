@@ -94,7 +94,7 @@ function runSearch() {
         break;
 
       case "Quit":
-        quit();
+        connection.end();
         break;
       }
     });
