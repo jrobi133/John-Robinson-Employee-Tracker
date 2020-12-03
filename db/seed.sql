@@ -1,9 +1,17 @@
 USE cm_systems;
 
 INSERT INTO employee
-    (first_name, last_name, roleTitle, manager_id)
+    (first_name, last_name, role_id, manager_id)
 VALUES
-    ('John', 'Robinson', 1, null);
+    ('John', 'Robinson', 1, null),
+    ('Bob', 'Jones', 6, null),
+    ('Kevin', 'Foster', 5, 1),
+    ('Keren', 'Kingston', 3, 6),
+    ('Dick', 'Long', 6, null),
+    ('Sam', 'Sung', 2, 1),
+    ('Saad', 'Maan', 4, 6),
+    ('ChrisP', 'Bacon', 2, 1),
+    ('Paul', 'Stonewall', 3, 6);
 
 INSERT INTO [role]
     (title, salary, department_id)
