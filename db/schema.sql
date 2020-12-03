@@ -28,7 +28,7 @@ CREATE TABLE [role]
 CREATE TABLE department
 (
     id INT NOT NULL,
-    [name] VARCHAR(30) NULL,
+    [name] VARCHAR(30) NOT NULL,
     -- to hold department name
     PRIMARY KEY (id)
 );
