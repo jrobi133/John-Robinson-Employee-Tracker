@@ -24,7 +24,7 @@ function runSearch() {
   inquirer
     .prompt({
       name: "action",
-      type: "rawlist",
+      type: "list",
       message: "What would you like to do?",
       choices: [
         "View All Employees",
@@ -98,4 +98,36 @@ function runSearch() {
         break;
       }
     });
+}
+
+function viewAllEmployees() {
+  connection.query("SELECT * FROM employee, [role], [department]", function(err, res) {
+    if (err) throw err;
+    console.log(res);
+    runSearch();
+  })
+}
+
+function viewAllEmployeesByDepartment() {
+  let departmentArray = [];
+  var query = "SELECT name FROM department", (err, res) {
+    for (i = 0; i < res.length; i++) {
+      departmentArray.push(res[i].name); 
+    }
+    inquirer
+      .prompt({
+        name: "department",
+        type: "list",
+        message: "Choose a department to search.",
+        choices: departmentArray
+      })
+      .then((answer) => {
+        var query = `SELECT e.id AS ID, e.first_name AS 'FirstName', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE department.name = '${answer.department}' ORDER BY ID ASC;`
+        connection.query(query, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+          runSearch();
+        })
+      })
+  }
 }
