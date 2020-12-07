@@ -134,31 +134,23 @@ function viewAllEmployeesByDepartment() {
   })
 }
 
-let roleArray = [];
-// let managerArray = [];
+
+
 function viewAllRoles() {
-  
-  connection.query("SELECT title FROM role", function (err, res)  {
-    for (i = 0; i < res.length; i++) {
-      roleArray.push(res[i].title); 
-    }
-    inquirer
-      .prompt({
-        name: "role",
-        type: "list",
-        message: "Choose a role to search.",
-        choices: roleArray
-      })
-      .then((answer) => {
-        var query = `SELECT e.id AS ID, e.first_name AS 'FirstName', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE role.title = '${answer.role}' ORDER BY ID ASC;`
-        connection.query(query, (err, res) => {
-          if (err) throw err;
-          console.table(res);
-          runSearch();
-        })
-      })
+  connection.query("SELECT * FROM role", function (err, res) {
+    if (err) throw err;
+    console.table(res);
+    runSearch();
   })
 }
+
+function viewAllDepartments() {
+  connection.query("SELECT * FROM department", function (err, res) {
+    if (err) throw err;
+    console.table(res);
+    runSearch();
+  })
+};
 
 
 function addEmployee() {
@@ -220,6 +212,20 @@ function addEmployee() {
   });
 };
 
+function addDepartment () {
+  inquirer.prompt({
+    name: "newDepartment",
+    type: "input",
+    message: "What is the name of the new department?"
+  }).then(function (answer) {
+    var query = "INSERT INTO department SET ?"
+    connection.query(query, { name: answer.newDepartment }, function (err, res) {
+      if (err) throw err;
+      console.log(res.affectedRows + "New department had been added.");
+      runSearch();
+    })
+  })
+}
 
 function updateEmployeeRole() {
   let records = (callback, []) ([
