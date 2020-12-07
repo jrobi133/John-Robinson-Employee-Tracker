@@ -135,7 +135,7 @@ function viewAllEmployeesByDepartment() {
 }
 
 let roleArray = [];
-let managerArray = [];
+// let managerArray = [];
 function viewAllRoles() {
   
   connection.query("SELECT title FROM role", function (err, res)  {
@@ -160,70 +160,140 @@ function viewAllRoles() {
   })
 }
 
+
 function addEmployee() {
-  // prompt for info about the item being put up for auction
-  connection.query("SELECT name FROM department", function (err, res) {
-    for (i = 0; i < res.length; i++) {
-      departmentArray.push(res[i].name); 
-    }
-  inquirer
-    .prompt([
-      {
-        name: "firstName",
-        type: "input",
-        message: "Enter new employees first name."
-      },
-      {
-        name: "lastName",
-        type: "input",
-        message: "Enter new employees last name."
-      },
-      {
-        name: "role",
-        type: "list",
-        message: "What is the role of the new employee?.",
-        choices: roleArray
-      },
-      {
-        name: "manager",
-        type: "list",
-        message: "Who is the manager of the new employee?.",
-        choices: managerArray
-      },
-      {
-        name: "startingBid",
-        type: "input",
-        message: "What would you like your starting bid to be?",
-        validate: function(value) {
-          if (isNaN(value) === false) {
-            return true;
-          }
-          return false;
-        }
-      }
-    ])
-    .then(function(answer) {
-      // when finished prompting, insert a new item into the db with that info
-      connection.query(
-        "INSERT INTO auctions SET ?",
-        {
-          first_name: answer.firstName,
-          last_name: answer.lastName,
-          role: answer.role,
-          category: answer.category,
-          starting_bid: answer.startingBid || 0,
-          highest_bid: answer.startingBid || 0
-        },
-        function(err) {
+  var currentRoles;
+  var currentEmployees;
+
+  connection.query("SELECT title, id from role", function (err, res) {
+      if (err) throw err;
+      var rolesArray = res.map(function (obj) {
+          return { name: obj.title, value: obj.id };
+      });
+
+      currentRoles = rolesArray;
+
+
+      connection.query("SELECT first_name, last_name, id from employee", function (err, res) {
           if (err) throw err;
-          console.log("Your auction was created successfully!");
-          // re-prompt the user for if they want to bid or post
-          start();
+          var employeeArray = res.map(function (obj) {
+              return { name: obj.first_name + " " + obj.last_name, value: obj.id };
+          });
+
+          currentEmployees = employeeArray;
+
+          inquirer
+              .prompt([
+                  {
+                      name: "firstName",
+                      type: "input",
+                      message: "What is the first name of the new employee?"
+                  },
+                  {
+                      name: "lastName",
+                      type: "input",
+                      message: "What is the last name of the new employee?"
+                  },
+                  {
+                      name: "employRole",
+                      type: "list",
+                      message: "What is this employee's role?",
+                      choices: currentRoles
+                  },
+                  {
+                      name: "employManage",
+                      type: "list",
+                      message: "Who, if anyone, manages this employee?",
+                      choices: currentEmployees
+                  }
+
+              ]).then(function (response) {
+                  var query = "INSERT INTO employee SET ?"
+                  connection.query(query, { first_name: response.firstName, last_name: response.lastName, role_id: response.employRole, manager_id: response.employManage }, function (err, res) {
+                      if (err) throw err;
+                      console.log(res.affectedRows + " Employee Added!\n");
+
+                      runSearch();
+                  });
+              });
+      });
+  });
+};
+
+
+function updateEmployeeRole() {
+  let records = (callback, []) ([
+    connection
+    .promise()
+    .query(`SELECT id, title FROM role ORDER BY title ASC;`)
+    .then(([rows, fields]) => {
+      return rows;
+    }),
+    connection
+    .promise()
+    .query(
+      `SELECT employee.id, concat(employee.first_name, ' ', employee.last_name) AS Employee FROM employee ORDER BY Employee ASC;`,
+    )
+    .then(([rows, fields]) => {
+      return rows;
+    }),
+  ]);
+  let employeeArray = [];
+  let roleArray = [];
+
+  //update roles array
+  for (i = 0; i < records[0].length; i++) {
+    roleArray.push(records[0][i].title);
+  }
+
+  //update employee array
+  for (i = 0; i < records[1].length; i++) {
+    employeeArray.push(records[1][i].Employee);
+  }
+  inquirer
+      .prompt([{
+          name: "employee",
+          type: "list",
+          message: "Select an employee.",
+          choices: employeeArray,
+        },
+        {
+          name: "role",
+          type: "list",
+          message: "what is the new role?",
+          choices: roleArray,
+        },
+      ])
+      .then((answer) => {
+        //creating variables
+        let roleId;
+        let employeeId;
+
+        for (i = 0; i < records[0].length; i++) {
+          if (answer.role == records[0][i].title) {
+            roleId = records[0][i].id;
+          }
         }
-      );
-    });
-  })
+
+        for (i = 0; i < records[1].length; i++) {
+          if (answer.employee == records[1][i].Employee) {
+            employeeId = records[1][i].id;
+          }
+        }
+        connection.query(
+          `UPDATE employee SET role_id = ${roleId} WHERE id = ${employeeId};`,
+          (err, res) => {
+            if (err) throw err;
+
+            console.log(`${answer.employee} role update to ${answer.role}...`);
+            //return to menu
+            callback();
+            connection.end();
+          },
+        );
+      });
 }
+
 
 // function addEmployee() {
 //   let roleArray = [];
