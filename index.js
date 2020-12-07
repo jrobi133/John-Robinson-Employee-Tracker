@@ -227,6 +227,21 @@ function addDepartment () {
   })
 }
 
+function addRole() {
+  inquirer.prompt({
+    name: "newRole",
+    type: "input",
+    message: "What is the name of the new role?"
+  }).then(function (answer) {
+    var query = "INSERT INTO role SET ?"
+    connection.query(query, { name: answer.newRole }, function (err, res) {
+      if (err) throw err;
+      console.log(res.affectedRows + "New role has been added.");
+      runSearch();
+    })
+  })
+};
+
 function updateEmployeeRole() {
   let records = (callback, []) ([
     connection
