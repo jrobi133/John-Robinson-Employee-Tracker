@@ -108,8 +108,10 @@ function viewAllEmployees() {
   })
 }
 
+
+let departmentArray = [];
 function viewAllEmployeesByDepartment() {
-  let departmentArray = [];
+  
   connection.query("SELECT name FROM department", function (err, res)  {
     for (i = 0; i < res.length; i++) {
       departmentArray.push(res[i].name); 
@@ -131,3 +133,195 @@ function viewAllEmployeesByDepartment() {
       })
   })
 }
+
+let roleArray = [];
+let managerArray = [];
+function viewAllRoles() {
+  
+  connection.query("SELECT title FROM role", function (err, res)  {
+    for (i = 0; i < res.length; i++) {
+      roleArray.push(res[i].title); 
+    }
+    inquirer
+      .prompt({
+        name: "role",
+        type: "list",
+        message: "Choose a role to search.",
+        choices: roleArray
+      })
+      .then((answer) => {
+        var query = `SELECT e.id AS ID, e.first_name AS 'FirstName', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE role.title = '${answer.role}' ORDER BY ID ASC;`
+        connection.query(query, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+          runSearch();
+        })
+      })
+  })
+}
+
+function addEmployee() {
+  // prompt for info about the item being put up for auction
+  connection.query("SELECT name FROM department", function (err, res) {
+    for (i = 0; i < res.length; i++) {
+      departmentArray.push(res[i].name); 
+    }
+  inquirer
+    .prompt([
+      {
+        name: "firstName",
+        type: "input",
+        message: "Enter new employees first name."
+      },
+      {
+        name: "lastName",
+        type: "input",
+        message: "Enter new employees last name."
+      },
+      {
+        name: "role",
+        type: "list",
+        message: "What is the role of the new employee?.",
+        choices: roleArray
+      },
+      {
+        name: "manager",
+        type: "list",
+        message: "Who is the manager of the new employee?.",
+        choices: managerArray
+      },
+      {
+        name: "startingBid",
+        type: "input",
+        message: "What would you like your starting bid to be?",
+        validate: function(value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        }
+      }
+    ])
+    .then(function(answer) {
+      // when finished prompting, insert a new item into the db with that info
+      connection.query(
+        "INSERT INTO auctions SET ?",
+        {
+          first_name: answer.firstName,
+          last_name: answer.lastName,
+          role: answer.role,
+          category: answer.category,
+          starting_bid: answer.startingBid || 0,
+          highest_bid: answer.startingBid || 0
+        },
+        function(err) {
+          if (err) throw err;
+          console.log("Your auction was created successfully!");
+          // re-prompt the user for if they want to bid or post
+          start();
+        }
+      );
+    });
+  })
+}
+
+// function addEmployee() {
+//   let roleArray = [];
+//       let managerArray = [];
+//       const allResults = Promise.all([
+//         connection
+//         .promise()
+//         .query(`SELECT id, title FROM role ORDER BY title ASC;`)
+//         .then(([rows, fields]) => {
+//           return rows;
+//         }),
+//         connection
+//         .promise()
+//         .query(
+//           `SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC;`,
+//         )
+//         .then(([rows, fields]) => {
+//           return rows;
+//         }),
+//       ]);
+
+//       console.log(allResults);
+//       for (i = 0; i < allResults[0].length; i++) {
+//         roleArray.push(allResults[0][i].title);
+//       }
+//       for (i = 0; i < allResults[1].length; i++) {
+//         managerArray.push(allResults[1][i].Employee);
+//       }
+
+//       console.log(roleArray);
+//       console.log(managerArray);
+//       inquirer
+//         .prompt([{
+//             name: "firstName",
+//             type: "input",
+//             message: "Enter first name of employee",
+//             validate: (input) => {
+//               if (input === "") {
+//                 console.log(`Enter a name.`);
+//                 return false;
+//               }
+//               return true;
+//             },
+//           },
+//           {
+//             name: "lastName",
+//             type: "input",
+//             message: "Enter last name of employee",
+//             validate: (input) => {
+//               if (input === "") {
+//                 console.log(`Enter a name.`);
+//                 return false;
+//               }
+//               return true;
+//             },
+//           },
+//           {
+//             name: "role",
+//             type: "list",
+//             message: "What is the role of the new employee?",
+//             choices: roleArray,
+//           },
+//           {
+//             name: "manager",
+//             type: "list",
+//             message: "who is the manager of the new employee?",
+//             choices: managerArray,
+//           },
+//         ])
+//         .then((answer) => {
+//           let roleId = null;
+//           let managerId = null;
+
+//           for (i = 0; i < allResults[0].length; i++) {
+//             if (answer.role == allResults[0][i].title) {
+//               roleId = allResults[0][i].id;
+//             }
+//           }
+//           for (i = 0; i < allResults[1].length; i++) {
+//             if (answer.manager == allResults[1][i].Employee) {
+//               managerId = allResults[1][i].id;
+//             }
+//           }
+
+//           connection.query(
+//             `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+//                   VALUES ("${answer.firstName}", "${answer.lastName}", ${roleId}, ${managerId});`,
+//             (err, res) => {
+//               if (err) return err;
+
+//               console.log(
+//                 `\n EMPLOYEE ${answer.firstName} ${answer.lastName} ADDED...\n `,
+//               );              
+//               runSearch();
+//             },
+//           );
+//         });
+// }
+
+// -----------------------------------------------------------------------------------
+
