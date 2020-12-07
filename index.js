@@ -228,93 +228,116 @@ function addDepartment () {
 }
 
 function addRole() {
-  inquirer.prompt({
+  var currentDepartment;
+  connection.query("SELECT name, id FROM department", function (err, res) {
+    if (err) throw err;
+    var departmentArray = res.map(function (obj) {
+        return { name: obj.name, value: obj.id };
+    });
+    currentDepartment = departmentArray;
+    
+
+  inquirer.prompt([
+    {
     name: "newRole",
     type: "input",
     message: "What is the name of the new role?"
-  }).then(function (answer) {
+  },
+    {
+    name: "roleSalary",
+    type: "input",
+    message: "How much salary does this roll get?"
+  },
+    {
+    name: "roleDepartment",
+    type: "list",
+    message: "What department will this role be in?",
+    choices: departmentArray
+  }
+  ]).then(function (answer) {
     var query = "INSERT INTO role SET ?"
-    connection.query(query, { name: answer.newRole }, function (err, res) {
+    connection.query(query, { title: answer.newRole, salary: answer.roleSalary, department_id: answer.roleDepartment }, function (err, res) {
       if (err) throw err;
       console.log(res.affectedRows + "New role has been added.");
       runSearch();
     })
   })
+})
 };
 
-function updateEmployeeRole() {
-  let records = (callback, []) ([
-    connection
-    .promise()
-    .query(`SELECT id, title FROM role ORDER BY title ASC;`)
-    .then(([rows, fields]) => {
-      return rows;
-    }),
-    connection
-    .promise()
-    .query(
-      `SELECT employee.id, concat(employee.first_name, ' ', employee.last_name) AS Employee FROM employee ORDER BY Employee ASC;`,
-    )
-    .then(([rows, fields]) => {
-      return rows;
-    }),
-  ]);
-  let employeeArray = [];
-  let roleArray = [];
+// function updateEmployeeRole() {
+//   let records = (callback, []) ([
+//     connection
+//     .promise()
+//     .query(`SELECT id, title FROM role ORDER BY title ASC;`)
+//     .then(([rows, fields]) => {
+//       return rows;
+//     }),
+//     connection
+//     .promise()
+//     .query(
+//       `SELECT employee.id, concat(employee.first_name, ' ', employee.last_name) AS Employee FROM employee ORDER BY Employee ASC;`,
+//     )
+//     .then(([rows, fields]) => {
+//       return rows;
+//     }),
+//   ]);
+//   let employeeArray = [];
+//   let roleArray = [];
 
-  //update roles array
-  for (i = 0; i < records[0].length; i++) {
-    roleArray.push(records[0][i].title);
-  }
+//   //update roles array
+//   for (i = 0; i < records[0].length; i++) {
+//     roleArray.push(records[0][i].title);
+//   }
 
-  //update employee array
-  for (i = 0; i < records[1].length; i++) {
-    employeeArray.push(records[1][i].Employee);
-  }
-  inquirer
-      .prompt([{
-          name: "employee",
-          type: "list",
-          message: "Select an employee.",
-          choices: employeeArray,
-        },
-        {
-          name: "role",
-          type: "list",
-          message: "what is the new role?",
-          choices: roleArray,
-        },
-      ])
-      .then((answer) => {
-        //creating variables
-        let roleId;
-        let employeeId;
+//   //update employee array
+//   for (i = 0; i < records[1].length; i++) {
+//     employeeArray.push(records[1][i].Employee);
+//   }
+//   inquirer
+//       .prompt([{
+//           name: "employee",
+//           type: "list",
+//           message: "Select an employee.",
+//           choices: employeeArray,
+//         },
+//         {
+//           name: "role",
+//           type: "list",
+//           message: "what is the new role?",
+//           choices: roleArray,
+//         },
+//       ])
+//       .then((answer) => {
+//         //creating variables
+//         let roleId;
+//         let employeeId;
 
-        for (i = 0; i < records[0].length; i++) {
-          if (answer.role == records[0][i].title) {
-            roleId = records[0][i].id;
-          }
-        }
+//         for (i = 0; i < records[0].length; i++) {
+//           if (answer.role == records[0][i].title) {
+//             roleId = records[0][i].id;
+//           }
+//         }
 
-        for (i = 0; i < records[1].length; i++) {
-          if (answer.employee == records[1][i].Employee) {
-            employeeId = records[1][i].id;
-          }
-        }
-        connection.query(
-          `UPDATE employee SET role_id = ${roleId} WHERE id = ${employeeId};`,
-          (err, res) => {
-            if (err) throw err;
+//         for (i = 0; i < records[1].length; i++) {
+//           if (answer.employee == records[1][i].Employee) {
+//             employeeId = records[1][i].id;
+//           }
+//         }
+//         connection.query(
+//           `UPDATE employee SET role_id = ${roleId} WHERE id = ${employeeId};`,
+//           (err, res) => {
+//             if (err) throw err;
 
-            console.log(`${answer.employee} role update to ${answer.role}...`);
-            //return to menu
-            callback();
-            connection.end();
-          },
-        );
-      });
-}
-
+//             console.log(`${answer.employee} role update to ${answer.role}...`);
+//             //return to menu
+//             callback();
+//             connection.end();
+//           },
+//         );
+//       });
+// }
+// -------------------------------------------------------------------------------------------------------------
 
 // function addEmployee() {
 //   let roleArray = [];
