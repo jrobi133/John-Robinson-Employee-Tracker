@@ -265,177 +265,45 @@ function addRole() {
 })
 };
 
-// function updateEmployeeRole() {
-//   let records = (callback, []) ([
-//     connection
-//     .promise()
-//     .query(`SELECT id, title FROM role ORDER BY title ASC;`)
-//     .then(([rows, fields]) => {
-//       return rows;
-//     }),
-//     connection
-//     .promise()
-//     .query(
-//       `SELECT employee.id, concat(employee.first_name, ' ', employee.last_name) AS Employee FROM employee ORDER BY Employee ASC;`,
-//     )
-//     .then(([rows, fields]) => {
-//       return rows;
-//     }),
-//   ]);
-//   let employeeArray = [];
-//   let roleArray = [];
+function updateEmployeeRole() {
+  var employees;
+  var currentRoles;
 
-//   //update roles array
-//   for (i = 0; i < records[0].length; i++) {
-//     roleArray.push(records[0][i].title);
-//   }
+  connection.query("SELECT title, id from role", function (err, res) {
+    if (err) throw err;
+      var rolesArray = res.map(function (obj) {
+        return{ name:obj.title, value: obj.id };
+      });
+      currentRoles = rolesArray;
 
-//   //update employee array
-//   for (i = 0; i < records[1].length; i++) {
-//     employeeArray.push(records[1][i].Employee);
-//   }
-//   inquirer
-//       .prompt([{
-//           name: "employee",
-//           type: "list",
-//           message: "Select an employee.",
-//           choices: employeeArray,
-//         },
-//         {
-//           name: "role",
-//           type: "list",
-//           message: "what is the new role?",
-//           choices: roleArray,
-//         },
-//       ])
-//       .then((answer) => {
-//         //creating variables
-//         let roleId;
-//         let employeeId;
+      connection.query("SELECT first_name, last_name, id from employee", function(err, res) {
+        if (err) throw err;
+        var employeeArray = res.map(function (obj) {
+          return { name: obj.first_name + " " + obj.last_name, value: obj.id };
+        });
+        employees = employeeArray;
 
-//         for (i = 0; i < records[0].length; i++) {
-//           if (answer.role == records[0][i].title) {
-//             roleId = records[0][i].id;
-//           }
-//         }
-
-//         for (i = 0; i < records[1].length; i++) {
-//           if (answer.employee == records[1][i].Employee) {
-//             employeeId = records[1][i].id;
-//           }
-//         }
-//         connection.query(
-//           `UPDATE employee SET role_id = ${roleId} WHERE id = ${employeeId};`,
-//           (err, res) => {
-//             if (err) throw err;
-
-//             console.log(`${answer.employee} role update to ${answer.role}...`);
-//             //return to menu
-//             callback();
-//             connection.end();
-//           },
-//         );
-//       });
-// }
-// -------------------------------------------------------------------------------------------------------------
-
-// function addEmployee() {
-//   let roleArray = [];
-//       let managerArray = [];
-//       const allResults = Promise.all([
-//         connection
-//         .promise()
-//         .query(`SELECT id, title FROM role ORDER BY title ASC;`)
-//         .then(([rows, fields]) => {
-//           return rows;
-//         }),
-//         connection
-//         .promise()
-//         .query(
-//           `SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC;`,
-//         )
-//         .then(([rows, fields]) => {
-//           return rows;
-//         }),
-//       ]);
-
-//       console.log(allResults);
-//       for (i = 0; i < allResults[0].length; i++) {
-//         roleArray.push(allResults[0][i].title);
-//       }
-//       for (i = 0; i < allResults[1].length; i++) {
-//         managerArray.push(allResults[1][i].Employee);
-//       }
-
-//       console.log(roleArray);
-//       console.log(managerArray);
-//       inquirer
-//         .prompt([{
-//             name: "firstName",
-//             type: "input",
-//             message: "Enter first name of employee",
-//             validate: (input) => {
-//               if (input === "") {
-//                 console.log(`Enter a name.`);
-//                 return false;
-//               }
-//               return true;
-//             },
-//           },
-//           {
-//             name: "lastName",
-//             type: "input",
-//             message: "Enter last name of employee",
-//             validate: (input) => {
-//               if (input === "") {
-//                 console.log(`Enter a name.`);
-//                 return false;
-//               }
-//               return true;
-//             },
-//           },
-//           {
-//             name: "role",
-//             type: "list",
-//             message: "What is the role of the new employee?",
-//             choices: roleArray,
-//           },
-//           {
-//             name: "manager",
-//             type: "list",
-//             message: "who is the manager of the new employee?",
-//             choices: managerArray,
-//           },
-//         ])
-//         .then((answer) => {
-//           let roleId = null;
-//           let managerId = null;
-
-//           for (i = 0; i < allResults[0].length; i++) {
-//             if (answer.role == allResults[0][i].title) {
-//               roleId = allResults[0][i].id;
-//             }
-//           }
-//           for (i = 0; i < allResults[1].length; i++) {
-//             if (answer.manager == allResults[1][i].Employee) {
-//               managerId = allResults[1][i].id;
-//             }
-//           }
-
-//           connection.query(
-//             `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-//                   VALUES ("${answer.firstName}", "${answer.lastName}", ${roleId}, ${managerId});`,
-//             (err, res) => {
-//               if (err) return err;
-
-//               console.log(
-//                 `\n EMPLOYEE ${answer.firstName} ${answer.lastName} ADDED...\n `,
-//               );              
-//               runSearch();
-//             },
-//           );
-//         });
-// }
-
-// -----------------------------------------------------------------------------------
-
+        inquirer.prompt([
+          {
+            name: "employeeName",
+            type: "list",
+            message: "Which employees role is changing?",
+            choices: employees
+          },
+          {
+            name:"newRole",
+            type:"list",
+            message:"What is their new role?",
+            choices: currentRoles
+          }
+        ]).then(function (answer) {
+          var query = "UPDATE employee SET ? WHERE ?";
+          connection.query(query, [{ role_id:answer.newRole }, {id: answer.employeeName }], function (err, res){
+            if(err) throw err;
+            console.log(res.affectedRows + " Role has been changed.");
+            runSearch();
+          })
+        })
+      })
+  })
+};
